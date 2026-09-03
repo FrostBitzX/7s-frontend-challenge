@@ -1,51 +1,50 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
-export const TIMER_DURATION = 5000; // 5 seconds
+const TIMER_DURATION = 5000;
 
 export function useTimerManager() {
   const timersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const startTimer = (
-    instanceId: string,
-    callback: () => void,
-    duration: number = TIMER_DURATION
-  ): void => {
-    if (timersRef.current.has(instanceId)) {
-      const existingTimer = timersRef.current.get(instanceId);
-      if (existingTimer) {
-        clearTimeout(existingTimer);
+
+  const startTimer = useCallback(
+    (instanceId: string, callback: () => void): void => {
+      if (timersRef.current.has(instanceId)) {
+        const existingTimer = timersRef.current.get(instanceId);
+        if (existingTimer) {
+          clearTimeout(existingTimer);
+        }
       }
-    }
 
-    const timeoutId = setTimeout(() => {
-      callback();
-      timersRef.current.delete(instanceId);
-    }, duration);
+      const timeoutId = setTimeout(() => {
+        callback();
+        timersRef.current.delete(instanceId);
+      }, TIMER_DURATION);
 
-    timersRef.current.set(instanceId, timeoutId);
-  };
+      timersRef.current.set(instanceId, timeoutId);
+    },
+    []
+  );
 
-  const cancelTimer = (instanceId: string): void => {
-    const timeoutId = timersRef.current.get(instanceId);
-    
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timersRef.current.delete(instanceId);
-    }
-  };
+  const cancelTimer = useCallback(
+    (instanceId: string): void => {
+      const timeoutId = timersRef.current.get(instanceId);
 
-  const cleanup = (): void => {
-    timersRef.current.forEach((timeoutId, instanceId) => {
-      clearTimeout(timeoutId);
-    });
-    timersRef.current.clear();
-  };
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timersRef.current.delete(instanceId);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
+    const timers = timersRef.current;
+
     return () => {
-      cleanup();
+      timers.forEach(clearTimeout);
+      timers.clear();
     };
   }, []);
-  
+
   return {
     startTimer,
     cancelTimer,
