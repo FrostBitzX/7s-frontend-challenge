@@ -5,7 +5,6 @@ export const initialState: TodoState = {
   mainList: initialItems.map((item): ItemInstance => ({
     instanceId: item.id,
     item,
-    timerStartedAt: null,
   })),
   fruitColumn: [],
   vegetableColumn: [],
@@ -18,7 +17,7 @@ export function todoReducer(state: TodoState, action: TodoAction): TodoState {
         (inst) => inst.item.id === action.itemId
       );
 
-      if (instanceIndex === -1) { // check if item not found in main list
+      if (instanceIndex === -1) {
         return state;
       }
 
@@ -28,7 +27,6 @@ export function todoReducer(state: TodoState, action: TodoAction): TodoState {
       const movedInstance: ItemInstance = {
         instanceId: action.instanceId,
         item: instance.item,
-        timerStartedAt: Date.now(),
       };
 
       if (instance.item.type === 'Fruit') {
@@ -61,13 +59,8 @@ export function todoReducer(state: TodoState, action: TodoAction): TodoState {
         return state;
       }
 
-      const returnedInstance: ItemInstance = {
-        ...found,
-        timerStartedAt: null,
-      };
-
       return {
-        mainList: [...state.mainList, returnedInstance],
+        mainList: [...state.mainList, found],
         fruitColumn: fromFruit
           ? state.fruitColumn.filter((inst) => inst.instanceId !== action.instanceId)
           : state.fruitColumn,
